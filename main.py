@@ -1,14 +1,14 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
 app = FastAPI()
 
-# Load TinyLlama model and tokenizer (once at startup)
-model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+# Load model on CPU (safe for Render)
+model_name = "tiiuae/falcon-rw-1b"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+model = AutoModelForCausalLM.from_pretrained(model_name)  # removed device_map & dtype
 
 # Input schema
 class ChatRequest(BaseModel):
@@ -16,15 +16,15 @@ class ChatRequest(BaseModel):
 
 @app.get("/")
 def root():
-    return {"message": "TinyLlama Chatbot is running on Render!"}
+    return {"message": "Falcon Chatbot is running!"}
 
 @app.post("/chat")
 def chat(request: ChatRequest):
-    prompt = f"<|system|>\nYou are a helpful assistant.\n<|user|>\n{request.message}\n<|assistant|>\n"
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    prompt = request.message
+    inputs = tokenizer(prompt, return_tensors="pt")
 
     with torch.no_grad():
-        output = model.generate(
+        outputs = model.generate(
             **inputs,
             max_new_tokens=100,
             do_sample=True,
@@ -33,6 +33,5 @@ def chat(request: ChatRequest):
             pad_token_id=tokenizer.eos_token_id
         )
 
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
-    reply = response.split("<|assistant|>")[-1].strip()
-    return {"response": reply}
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return {"response": response[len(prompt):].strip()}

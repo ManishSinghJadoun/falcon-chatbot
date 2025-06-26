@@ -1,4 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 transformers
-torch
+sentence-transformers
+faiss-cpu
+gitpython
+# Use a lightweight torch version (CPU only)
+torch==1.9.1+cpu -f https://download.pytorch.org/whl/torch_stable.html

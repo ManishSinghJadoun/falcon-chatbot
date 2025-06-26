@@ -1,8 +1,10 @@
 services:
   - type: web
-    name: tinyllama-chatbot
-    runtime: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn main:app --host 0.0.0.0 --port 10000"
-    region: oregon
+    name: fastapi-rag-app
+    env: python
     plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "./start.sh"
+    envVars:
+      - key: PORT
+        value: 10000

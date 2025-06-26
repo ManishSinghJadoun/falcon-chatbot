@@ -4,4 +4,4 @@ transformers
 sentence-transformers
 faiss-cpu
 gitpython
-torch==1.9.1
+torch==2.5.0
